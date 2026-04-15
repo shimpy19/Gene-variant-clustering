@@ -1,8 +1,4 @@
 #include "parse.h"
-#include <iostream>
-#include <fstream>
-#include <utility>
-
 
 std::pair<std::vector<FastqRecord>, std::vector<SeqRecord>> parseFastq(const std::string& filename) {
     std::vector<FastqRecord> records;
@@ -38,7 +34,7 @@ std::pair<std::vector<FastqRecord>, std::vector<SeqRecord>> parseFastq(const std
         else if (position == 0) {
             // Quality
             currentRecord.quality = line;
-            if (currentRecord.sequence.length() >= 290 && currentRecord.sequence.length() <= 305) {
+            if (currentRecord.sequence.length() == 296) {
                 records.push_back(currentRecord);
                 seqrecords.push_back(currentSeqRecord);
             }
@@ -47,20 +43,4 @@ std::pair<std::vector<FastqRecord>, std::vector<SeqRecord>> parseFastq(const std
     
     file.close();
     return {records, seqrecords};
-}
-
-// Testni main, ne moras gledat
-int main() {
-    std::string filename = "Bioinformatika - jeleni-2/fastq/J32_B_CE_IonXpress_008.fastq";
-    auto result = parseFastq(filename);
-    auto allRecords = result.first;
-    auto seqRecords = result.second;
-
-    for (int i = 0; i < std::min(3, (int)allRecords.size()); i++) {
-        std::cout << allRecords[i].header << std::endl;
-        std::cout << allRecords[i].sequence << " (duljina: " << allRecords[i].sequence.length() << ")" << std::endl;
-        std::cout << std::endl;
-    }
-    
-    return 0;
 }

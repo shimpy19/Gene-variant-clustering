@@ -3,6 +3,9 @@
 
 #include <string>
 #include <vector>
+#include <iostream>
+#include <fstream>
+#include <utility>
 
 struct FastqRecord {
     std::string header;
@@ -14,6 +17,5 @@ struct SeqRecord {
 };
 
 std::pair<std::vector<FastqRecord>, std::vector<SeqRecord>> parseFastq(const std::string& filename);
-void printRecords(const std::vector<FastqRecord>& records);
 
 #endif
