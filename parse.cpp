@@ -38,11 +38,11 @@ std::pair<std::vector<FastqRecord>, std::vector<SeqRecord>> parseFastq(const std
         else if (position == 0) {
             // Quality
             currentRecord.quality = line;
-        }
-        if (currentRecord.sequence.length() >= 290 && currentRecord.sequence.length() <= 305) {
+            if (currentRecord.sequence.length() >= 290 && currentRecord.sequence.length() <= 305) {
                 records.push_back(currentRecord);
                 seqrecords.push_back(currentSeqRecord);
             }
+        }
     }
     
     file.close();
@@ -52,9 +52,9 @@ std::pair<std::vector<FastqRecord>, std::vector<SeqRecord>> parseFastq(const std
 // Testni main, ne moras gledat
 int main() {
     std::string filename = "Bioinformatika - jeleni-2/fastq/J32_B_CE_IonXpress_008.fastq";
-    
-    auto [allRecords, seqRecords] = parseFastq(filename);
-    std::cout << allRecords.size() << std::endl;
+    auto result = parseFastq(filename);
+    auto allRecords = result.first;
+    auto seqRecords = result.second;
 
     for (int i = 0; i < std::min(3, (int)allRecords.size()); i++) {
         std::cout << allRecords[i].header << std::endl;
