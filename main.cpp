@@ -1,25 +1,53 @@
-#include "parse.cpp"
-#include "algorithm.cpp"
+#include "parse.h"
+#include "algorithm.h"
+#include <iostream>
+#include <fstream>
 
 int main() {
-    std::string filename = "Bioinformatika - jeleni-2/fastq/J32_B_CE_IonXpress_008.fastq";
+    std::string filename = "Bioinformatika - jeleni-2/fastq/J29_B_CE_IonXpress_005.fastq";
 
     auto result = parseFastq(filename);
     auto allRecords = result.first;
     auto seqRecords = result.second;
 
-    for (int i = 0; i < std::min(3, (int)allRecords.size()); i++) {
-        std::cout << allRecords[i].header << std::endl;
-        std::cout << allRecords[i].sequence << " (duljina: " << allRecords[i].sequence.length() << ")" << std::endl;
-        std::cout << std::endl;
+    std::ofstream seqFile("sequences_J29.txt");
+    if (seqFile.is_open()) {
+        for (size_t i = 0; i < seqRecords.size(); i++) {
+            seqFile << i << "\t" << seqRecords[i].sequence << "\n";
+            }
+            seqFile.close();
+        } 
+    else {
+        std::cerr << "Greška: Ne mogu otvoriti datoteku za pisanje sekvenci." << std::endl;
     }
 
-    Parameters params = {1, -1, -2};
+    std::vector<std::vector<int>> distance_matrix(1700, std::vector<int>(1700));
 
-    AlignmentResult alignment = needlemanWunsch(seqRecords[0].sequence, seqRecords[1].sequence, params);
-    std::cout << "Alignment score: " << alignment.score << std::endl;
-    std::cout << "Aligned Seq 1: " << alignment.alignedSeq1 << std::endl;
-    std::cout << "Aligned Seq 2: " << alignment.alignedSeq2 << std::endl;
+    #pragma omp parallel for collapse(2)
+    for(size_t i = 0; i < seqRecords.size(); i++) {
+        for(size_t j = i+1; j < seqRecords.size(); j++) {
+            auto alignmentResult = needlemanWunsch(seqRecords[i].sequence, seqRecords[j].sequence, {1, -1, -2});
+            distance_matrix[i][j] = std::max(0, 296 - alignmentResult.score);
+            distance_matrix[j][i] = std::max(0, 296 - alignmentResult.score);
+        }
+    }
+
+    std::string baseName = filename.substr(filename.find_last_of("/\\") + 1);
+    std::string sampleName = baseName.substr(0, baseName.find("_"));
+    std::string outputFileName = "distance_matrix_" + sampleName + ".txt";
+
+    std::ofstream outputFile(outputFileName);
+    if(outputFile.is_open()){
+        for(size_t i = 0; i < seqRecords.size(); i++) {
+            for(size_t j = 0; j < seqRecords.size(); j++) {
+                outputFile << distance_matrix[i][j] << " ";
+            }
+            outputFile << std::endl;
+        }
+        outputFile.close();
+    } else {
+        std::cerr << "Greška: Ne mogu otvoriti datoteku za pisanje." << std::endl;
+    }
     
     return 0;
 }

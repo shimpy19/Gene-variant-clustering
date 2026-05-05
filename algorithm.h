@@ -12,8 +12,6 @@ struct Parameters {
 
 struct AlignmentResult {
     int score;
-    std::string alignedSeq1;
-    std::string alignedSeq2;
 };
 
 AlignmentResult needlemanWunsch(

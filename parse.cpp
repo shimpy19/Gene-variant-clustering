@@ -34,7 +34,7 @@ std::pair<std::vector<FastqRecord>, std::vector<SeqRecord>> parseFastq(const std
         else if (position == 0) {
             // Quality
             currentRecord.quality = line;
-            if (currentRecord.sequence.length() == 296) {
+            if (currentRecord.sequence.length() <= 301 && currentRecord.sequence.length() >= 291) {
                 records.push_back(currentRecord);
                 seqrecords.push_back(currentSeqRecord);
             }
