@@ -1,5 +1,6 @@
 #include "parse.h"
 #include "algorithm.h"
+#include "clustering.h"
 #include <iostream>
 #include <fstream>
 
@@ -18,7 +19,7 @@ int main() {
             seqFile.close();
         } 
     else {
-        std::cerr << "Greška: Ne mogu otvoriti datoteku za pisanje sekvenci." << std::endl;
+        std::cerr << "Error: Cannot open sequence file." << std::endl;
     }
 
     std::vector<std::vector<int>> distance_matrix(1700, std::vector<int>(1700));
@@ -35,6 +36,7 @@ int main() {
     std::string baseName = filename.substr(filename.find_last_of("/\\") + 1);
     std::string sampleName = baseName.substr(0, baseName.find("_"));
     std::string outputFileName = "distance_matrix_" + sampleName + ".txt";
+    std::string seqFileName = "sequences_" + sampleName + ".txt";
 
     std::ofstream outputFile(outputFileName);
     if(outputFile.is_open()){
@@ -45,8 +47,11 @@ int main() {
             outputFile << std::endl;
         }
         outputFile.close();
+        
+        runClustering(outputFileName, seqFileName);
+
     } else {
-        std::cerr << "Greška: Ne mogu otvoriti datoteku za pisanje." << std::endl;
+        std::cerr << "Error: Cannot open output file." << std::endl;
     }
     
     return 0;
