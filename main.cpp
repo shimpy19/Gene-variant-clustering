@@ -3,56 +3,74 @@
 #include "clustering.h"
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 
 int main() {
-    std::string filename = "Bioinformatika - jeleni-2/fastq/J29_B_CE_IonXpress_005.fastq";
+    namespace fs = std::filesystem;
+    const std::string dirPath = "Bioinformatika - jeleni-2/fastq";
 
-    auto result = parseFastq(filename);
-    auto allRecords = result.first;
-    auto seqRecords = result.second;
+    for (const auto& entry : fs::directory_iterator(dirPath)) {
+        if (!entry.is_regular_file()) continue;
+        if (entry.path().extension() != ".fastq") continue;
 
-    std::ofstream seqFile("sequences_J29.txt");
-    if (seqFile.is_open()) {
-        for (size_t i = 0; i < seqRecords.size(); i++) {
-            seqFile << i << "\t" << seqRecords[i].sequence << "\n";
+        std::string filename = entry.path().string();
+
+        auto result = parseFastq(filename);
+        auto allRecords = result.first;
+        auto seqRecords = result.second;
+
+        if (seqRecords.empty()) {
+            std::cerr << "Warning: no sequences parsed from " << filename << std::endl;
+            continue;
+        }
+
+        std::string baseName = entry.path().filename().string();
+        std::string sampleName = baseName.substr(0, baseName.find("_"));
+        std::string seqFileName = "sequences_" + sampleName + ".txt";
+        std::string outputFileName = "distance_matrix_" + sampleName + ".txt";
+
+        std::ofstream seqFile(seqFileName);
+        if (seqFile.is_open()) {
+            for (size_t i = 0; i < seqRecords.size(); i++) {
+                seqFile << i << "\t" << seqRecords[i].sequence << "\n";
             }
             seqFile.close();
-        } 
-    else {
-        std::cerr << "Error: Cannot open sequence file." << std::endl;
-    }
-
-    std::vector<std::vector<int>> distance_matrix(1700, std::vector<int>(1700));
-
-    #pragma omp parallel for collapse(2)
-    for(size_t i = 0; i < seqRecords.size(); i++) {
-        for(size_t j = i+1; j < seqRecords.size(); j++) {
-            auto alignmentResult = needlemanWunsch(seqRecords[i].sequence, seqRecords[j].sequence, {1, -1, -2});
-            distance_matrix[i][j] = std::max(0, 296 - alignmentResult.score);
-            distance_matrix[j][i] = std::max(0, 296 - alignmentResult.score);
+        } else {
+            std::cerr << "Error: Cannot open sequence file " << seqFileName << std::endl;
+            continue;
         }
-    }
 
-    std::string baseName = filename.substr(filename.find_last_of("/\\") + 1);
-    std::string sampleName = baseName.substr(0, baseName.find("_"));
-    std::string outputFileName = "distance_matrix_" + sampleName + ".txt";
-    std::string seqFileName = "sequences_" + sampleName + ".txt";
+        int n = static_cast<int>(seqRecords.size());
+        std::vector<std::vector<int>> distance_matrix(n, std::vector<int>(n, 0));
 
-    std::ofstream outputFile(outputFileName);
-    if(outputFile.is_open()){
-        for(size_t i = 0; i < seqRecords.size(); i++) {
-            for(size_t j = 0; j < seqRecords.size(); j++) {
-                outputFile << distance_matrix[i][j] << " ";
+        Parameters params{1, -1, -2};
+
+        #pragma omp parallel for collapse(2)
+        for (int i = 0; i < n; ++i) {
+            for (int j = i + 1; j < n; ++j) {
+                auto alignmentResult = needlemanWunsch(seqRecords[i].sequence, seqRecords[j].sequence, params);
+                int d = std::max(0, 296 - alignmentResult.score);
+                distance_matrix[i][j] = d;
+                distance_matrix[j][i] = d;
             }
-            outputFile << std::endl;
         }
-        outputFile.close();
-        
-        runClustering(outputFileName, seqFileName);
 
-    } else {
-        std::cerr << "Error: Cannot open output file." << std::endl;
+        std::ofstream outputFile(outputFileName);
+        if (outputFile.is_open()){
+            for (int i = 0; i < n; ++i) {
+                for (int j = 0; j < n; ++j) {
+                    outputFile << distance_matrix[i][j] << " ";
+                }
+                outputFile << std::endl;
+            }
+            outputFile.close();
+
+            runClustering(outputFileName, seqFileName);
+
+        } else {
+            std::cerr << "Error: Cannot open output file " << outputFileName << std::endl;
+        }
     }
-    
+
     return 0;
 }
