@@ -9,11 +9,18 @@ int main() {
     namespace fs = std::filesystem;
     const std::string dirPath = "Bioinformatika - jeleni-2/fastq";
 
+    const fs::path matricesDir = "matrices";
+    const fs::path sequencesDir = "sequences";
+
+    fs::create_directories(matricesDir);
+    fs::create_directories(sequencesDir);
+
     for (const auto& entry : fs::directory_iterator(dirPath)) {
         if (!entry.is_regular_file()) continue;
         if (entry.path().extension() != ".fastq") continue;
 
         std::string filename = entry.path().string();
+        std::cout << "Processing file: " << entry.path().filename().string() << std::endl;
 
         auto result = parseFastq(filename);
         auto allRecords = result.first;
@@ -26,8 +33,11 @@ int main() {
 
         std::string baseName = entry.path().filename().string();
         std::string sampleName = baseName.substr(0, baseName.find("_"));
-        std::string seqFileName = "sequences_" + sampleName + ".txt";
-        std::string outputFileName = "distance_matrix_" + sampleName + ".txt";
+        fs::path seqFilePath = sequencesDir / ("sequences_" + sampleName + ".txt");
+        fs::path matrixFilePath = matricesDir / ("distance_matrix_" + sampleName + ".txt");
+
+        std::string seqFileName = seqFilePath.string();
+        std::string outputFileName = matrixFilePath.string();
 
         std::ofstream seqFile(seqFileName);
         if (seqFile.is_open()) {

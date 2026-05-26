@@ -1,5 +1,5 @@
 compile (requires C++17):
-g++ -std=c++17 -fopenmp -O2 main.cpp algorithm.cpp parse.cpp -o main
+g++ -std=c++17 -fopenmp -O2 main.cpp algorithm.cpp parse.cpp clustering.cpp -o main
 
 run:
 ./main.exe
