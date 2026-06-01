@@ -4,6 +4,8 @@ import argparse
 from pathlib import Path
 from spoa import poa
 
+# clustering function that uses KMedoids from scikit-learn-extra to cluster the sequences
+# based on the distance matrix 
 def clustering(distance_matrix_file, sequences_file):
     distance_matrix = np.loadtxt(distance_matrix_file)
 
@@ -20,6 +22,7 @@ def clustering(distance_matrix_file, sequences_file):
     labels = None
     max_k = min(6, n_samples)
 
+    # try different values of k from 2 to max_k and check the inertia to find the optimal number of clusters
     for num in range(2, max_k + 1):
         print(f"Testing k={num}")
         kmedoids = KMedoids(n_clusters=num, metric='precomputed', method='pam', init='k-medoids++', random_state=42)
@@ -49,6 +52,7 @@ def clustering(distance_matrix_file, sequences_file):
                 clusters[label] = []
             clusters[label].append(sequences[i])
 
+        # create output directory for clustering results if it doesn't exist
         clustering_dir = Path("clustering")
         clustering_dir.mkdir(parents=True, exist_ok=True)
 
@@ -61,6 +65,7 @@ def clustering(distance_matrix_file, sequences_file):
         with open(clustering_output_path, "w") as clustering_output_file:
             for cluster_id, cluster_sequences in clusters.items():
                 if len(cluster_sequences) > 1:
+                    # perform partial order alignment (POA) to get the consensus sequence for the cluster
                     consensus, msa = poa(cluster_sequences)
                     line = f"Cluster {cluster_id} | size: {len(cluster_sequences)} | consensus: {consensus}"
                 else:

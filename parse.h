@@ -7,11 +7,13 @@
 #include <fstream>
 #include <utility>
 
+// struct for storing Fastq records
 struct FastqRecord {
     std::string header;
     std::string sequence;
     std::string quality;
 };
+// struct for storing sequence records
 struct SeqRecord {
     std::string sequence;
 };

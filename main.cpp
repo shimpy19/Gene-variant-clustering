@@ -7,14 +7,17 @@
 
 int main() {
     namespace fs = std::filesystem;
+    // path to the directory containing the Fastq files
     const std::string dirPath = "Bioinformatika - jeleni-2/fastq";
 
     const fs::path matricesDir = "matrices";
     const fs::path sequencesDir = "sequences";
 
+    // create output directories if they don't exist
     fs::create_directories(matricesDir);
     fs::create_directories(sequencesDir);
 
+    // loop through all Fastq files in the specified directory
     for (const auto& entry : fs::directory_iterator(dirPath)) {
         if (!entry.is_regular_file()) continue;
         if (entry.path().extension() != ".fastq") continue;
@@ -31,6 +34,7 @@ int main() {
             continue;
         }
 
+        // derive sample name from the file name
         std::string baseName = entry.path().filename().string();
         std::string sampleName = baseName.substr(0, baseName.find("_"));
         fs::path seqFilePath = sequencesDir / ("sequences_" + sampleName + ".txt");
@@ -51,10 +55,13 @@ int main() {
         }
 
         int n = static_cast<int>(seqRecords.size());
+        // initialize distance matrix with zeros
         std::vector<std::vector<int>> distance_matrix(n, std::vector<int>(n, 0));
 
+        // alignment parameters: match score = 1, mismatch penalty = -1, gap penalty = -2
         Parameters params{1, -1, -2};
 
+        // compute pairwise needleman-wunsch distances in parallel using OpenMP
         #pragma omp parallel for collapse(2)
         for (int i = 0; i < n; ++i) {
             for (int j = i + 1; j < n; ++j) {
@@ -65,6 +72,7 @@ int main() {
             }
         }
 
+        // write distance matrix to output file
         std::ofstream outputFile(outputFileName);
         if (outputFile.is_open()){
             for (int i = 0; i < n; ++i) {

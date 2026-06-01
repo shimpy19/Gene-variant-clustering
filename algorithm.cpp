@@ -1,5 +1,6 @@
 #include "algorithm.h"
 
+// Needleman-Wunsch global alignment algorithm implementation without traceback
 AlignmentResult needlemanWunsch(
     const std::string& seq1, const std::string& seq2, const Parameters& params)
 {

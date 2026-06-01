@@ -1,5 +1,7 @@
 #include "parse.h"
 
+// function that parses a Fastq file and returns a pair made up of a vector of FastqRecord 
+// and a vector of SeqRecord
 std::pair<std::vector<FastqRecord>, std::vector<SeqRecord>> parseFastq(const std::string& filename) {
     std::vector<FastqRecord> records;
     std::vector<SeqRecord> seqrecords;
@@ -34,6 +36,7 @@ std::pair<std::vector<FastqRecord>, std::vector<SeqRecord>> parseFastq(const std
         else if (position == 0) {
             // Quality
             currentRecord.quality = line;
+            // we're only interested in records where the sequence length is between 291 and 301
             if (currentRecord.sequence.length() <= 301 && currentRecord.sequence.length() >= 291) {
                 records.push_back(currentRecord);
                 seqrecords.push_back(currentSeqRecord);
